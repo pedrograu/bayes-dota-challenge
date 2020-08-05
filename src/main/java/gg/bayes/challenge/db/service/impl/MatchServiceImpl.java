@@ -1,10 +1,12 @@
 package gg.bayes.challenge.db.service.impl;
 
+import gg.bayes.challenge.business.model.HeroItemsLogic;
 import gg.bayes.challenge.business.model.HeroKillsLogic;
 import gg.bayes.challenge.db.entities.MatchDamageEntity;
 import gg.bayes.challenge.db.entities.MatchItemEntity;
 import gg.bayes.challenge.db.entities.MatchKillEntity;
 import gg.bayes.challenge.db.entities.MatchSpellEntity;
+import gg.bayes.challenge.db.model.HeroItemsDAO;
 import gg.bayes.challenge.db.model.HeroKillsDAO;
 import gg.bayes.challenge.db.service.MatchService;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +64,18 @@ public class MatchServiceImpl implements MatchService {
         return heroKillsDAOList.stream().map(heroKillsDAO -> HeroKillsLogic.builder()
                 .hero(heroKillsDAO.getHero())
                 .kills(heroKillsDAO.getKills())
+                .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<HeroItemsLogic> getHeroItemsDaoGivenMatchIdAndHero(Long matchId, String heroName) {
+        String sql = "SELECT item, time_purchase FROM bayes.match_items WHERE match_id = ? and hero = ?";
+
+        List<HeroItemsDAO> heroItemsDAOList = jdbcTemplate.query(sql, new Object[]{matchId, heroName}, new BeanPropertyRowMapper<>(HeroItemsDAO.class));
+        return heroItemsDAOList.stream().map(heroItemsDAO -> HeroItemsLogic.builder()
+                .item(heroItemsDAO.getItem())
+                .timePurchase(heroItemsDAO.getTime_purchase())
                 .build())
                 .collect(Collectors.toList());
     }
@@ -139,7 +153,6 @@ public class MatchServiceImpl implements MatchService {
     }
 
     //[00:10:42.031] npc_dota_hero_bane hits npc_dota_hero_abyssal_underlord with dota_unknown for 51 damage (740->689)
-    //SELECT target, count(match_id) as damage_instances, sum(damage) as total_damage FROM BAYES.MATCH_DAMAGE where match_id = 1 and hero = 'puck' group by target
     private void storeDamage(String line, Long matchId) {
         String[] strings = line.split(HERO_PREFIX);
         MatchDamageEntity matchDamageEntity = new MatchDamageEntity();
