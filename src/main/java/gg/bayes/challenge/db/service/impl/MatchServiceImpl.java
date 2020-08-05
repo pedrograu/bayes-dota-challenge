@@ -1,5 +1,6 @@
 package gg.bayes.challenge.db.service.impl;
 
+import gg.bayes.challenge.business.model.HeroDamageLogic;
 import gg.bayes.challenge.business.model.HeroItemsLogic;
 import gg.bayes.challenge.business.model.HeroKillsLogic;
 import gg.bayes.challenge.business.model.HeroSpellsLogic;
@@ -7,6 +8,7 @@ import gg.bayes.challenge.db.entities.MatchDamageEntity;
 import gg.bayes.challenge.db.entities.MatchItemEntity;
 import gg.bayes.challenge.db.entities.MatchKillEntity;
 import gg.bayes.challenge.db.entities.MatchSpellEntity;
+import gg.bayes.challenge.db.model.HeroDamageDAO;
 import gg.bayes.challenge.db.model.HeroItemsDAO;
 import gg.bayes.challenge.db.model.HeroKillsDAO;
 import gg.bayes.challenge.db.model.HeroSpellsDAO;
@@ -89,6 +91,18 @@ public class MatchServiceImpl implements MatchService {
         return heroSpellsDAOList.stream().map(heroSpellsDAO -> HeroSpellsLogic.builder()
                 .spell(heroSpellsDAO.getSpell())
                 .casts(heroSpellsDAO.getCasts())
+                .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<HeroDamageLogic> getHeroDamageDaoGivenMatchIdAndHero(Long matchId, String heroName) {
+        String sql = "SELECT target, count(match_id) as damage_instances, sum(damage) as total_damage FROM BAYES.MATCH_DAMAGE where match_id = ? and hero = ? group by target";
+        List<HeroDamageDAO> heroDamageDAOS = jdbcTemplate.query(sql, new Object[]{matchId, heroName}, new BeanPropertyRowMapper<>(HeroDamageDAO.class));
+        return heroDamageDAOS.stream().map(heroDamageDAO -> HeroDamageLogic.builder()
+                .target(heroDamageDAO.getTarget())
+                .damageInstances(heroDamageDAO.getDamageInstances())
+                .totalDamage(heroDamageDAO.getTotalDamage())
                 .build())
                 .collect(Collectors.toList());
     }

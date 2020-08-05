@@ -1,5 +1,6 @@
 package gg.bayes.challenge.rest.controller;
 
+import gg.bayes.challenge.business.model.HeroDamageLogic;
 import gg.bayes.challenge.business.model.HeroItemsLogic;
 import gg.bayes.challenge.business.model.HeroKillsLogic;
 import gg.bayes.challenge.business.model.HeroSpellsLogic;
@@ -63,7 +64,7 @@ public class MatchController {
                                                     @PathVariable("heroName") String heroName) {
         try {
             List<HeroItemsLogic> heroItemsLogics = matchService.getHeroItemsDaoGivenMatchIdAndHero(matchId, heroName);
-            if (heroItemsLogics.isEmpty()){
+            if (heroItemsLogics.isEmpty()) {
                 return ResponseEntity.noContent().build();
             }
             List<HeroItems> heroItems = heroItemsLogics.stream().map(this::transformHeroItems).collect(Collectors.toList());
@@ -79,7 +80,7 @@ public class MatchController {
                                                       @PathVariable("heroName") String heroName) {
         try {
             List<HeroSpellsLogic> heroSpellsLogics = matchService.getHeroSpellsDaoGivenMatchIdAndHero(matchId, heroName);
-            if (heroSpellsLogics.isEmpty()){
+            if (heroSpellsLogics.isEmpty()) {
                 return ResponseEntity.noContent().build();
             }
             List<HeroSpells> heroSpells = heroSpellsLogics.stream().map(this::transformHeroSpells).collect(Collectors.toList());
@@ -93,8 +94,18 @@ public class MatchController {
     @GetMapping("{matchId}/{heroName}/damage")
     public ResponseEntity<List<HeroDamage>> getDamage(@PathVariable("matchId") Long matchId,
                                                       @PathVariable("heroName") String heroName) {
-        // TODO use match service to retrieve stats
-        throw new NotImplementedException("should be implemented by the applicant");
+        try {
+            List<HeroDamageLogic> heroDamageLogics = matchService.getHeroDamageDaoGivenMatchIdAndHero(matchId, heroName);
+            if (heroDamageLogics.isEmpty()){
+                return ResponseEntity.noContent().build();
+            }
+
+            List<HeroDamage> heroDamages = heroDamageLogics.stream().map(this::transformHeroDamage).collect(Collectors.toList());
+
+            return ResponseEntity.ok(heroDamages);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     private HeroKills transformHeroKills(HeroKillsLogic heroKillsLogic) {
@@ -116,5 +127,13 @@ public class MatchController {
         heroSpells.setSpell(heroSpellsLogic.getSpell());
         heroSpells.setCasts(heroSpellsLogic.getCasts());
         return heroSpells;
+    }
+
+    private HeroDamage transformHeroDamage(HeroDamageLogic heroDamageLogic) {
+        HeroDamage heroDamage = new HeroDamage();
+        heroDamage.setTarget(heroDamageLogic.getTarget());
+        heroDamage.setDamageInstances(heroDamageLogic.getDamageInstances());
+        heroDamage.setTotalDamage(heroDamageLogic.getTotalDamage());
+        return heroDamage;
     }
 }
