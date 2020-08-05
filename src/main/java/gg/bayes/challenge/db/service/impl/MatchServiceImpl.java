@@ -2,12 +2,14 @@ package gg.bayes.challenge.db.service.impl;
 
 import gg.bayes.challenge.business.model.HeroItemsLogic;
 import gg.bayes.challenge.business.model.HeroKillsLogic;
+import gg.bayes.challenge.business.model.HeroSpellsLogic;
 import gg.bayes.challenge.db.entities.MatchDamageEntity;
 import gg.bayes.challenge.db.entities.MatchItemEntity;
 import gg.bayes.challenge.db.entities.MatchKillEntity;
 import gg.bayes.challenge.db.entities.MatchSpellEntity;
 import gg.bayes.challenge.db.model.HeroItemsDAO;
 import gg.bayes.challenge.db.model.HeroKillsDAO;
+import gg.bayes.challenge.db.model.HeroSpellsDAO;
 import gg.bayes.challenge.db.service.MatchService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,6 +78,17 @@ public class MatchServiceImpl implements MatchService {
         return heroItemsDAOList.stream().map(heroItemsDAO -> HeroItemsLogic.builder()
                 .item(heroItemsDAO.getItem())
                 .timePurchase(heroItemsDAO.getTime_purchase())
+                .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<HeroSpellsLogic> getHeroSpellsDaoGivenMatchIdAndHero(Long matchId, String heroName) {
+        String sql = "SELECT spell, count(match_id) as casts FROM bayes.match_spells WHERE match_id = ? and hero = ? GROUP BY spell";
+        List<HeroSpellsDAO> heroSpellsDAOList = jdbcTemplate.query(sql, new Object[]{matchId, heroName}, new BeanPropertyRowMapper<>(HeroSpellsDAO.class));
+        return heroSpellsDAOList.stream().map(heroSpellsDAO -> HeroSpellsLogic.builder()
+                .spell(heroSpellsDAO.getSpell())
+                .casts(heroSpellsDAO.getCasts())
                 .build())
                 .collect(Collectors.toList());
     }

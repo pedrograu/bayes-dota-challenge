@@ -2,6 +2,7 @@ package gg.bayes.challenge.rest.controller;
 
 import gg.bayes.challenge.business.model.HeroItemsLogic;
 import gg.bayes.challenge.business.model.HeroKillsLogic;
+import gg.bayes.challenge.business.model.HeroSpellsLogic;
 import gg.bayes.challenge.db.service.MatchService;
 import gg.bayes.challenge.rest.model.HeroDamage;
 import gg.bayes.challenge.rest.model.HeroItems;
@@ -76,8 +77,17 @@ public class MatchController {
     @GetMapping("{matchId}/{heroName}/spells")
     public ResponseEntity<List<HeroSpells>> getSpells(@PathVariable("matchId") Long matchId,
                                                       @PathVariable("heroName") String heroName) {
-        // TODO use match service to retrieve stats
-        throw new NotImplementedException("should be implemented by the applicant");
+        try {
+            List<HeroSpellsLogic> heroSpellsLogics = matchService.getHeroSpellsDaoGivenMatchIdAndHero(matchId, heroName);
+            if (heroSpellsLogics.isEmpty()){
+                return ResponseEntity.noContent().build();
+            }
+            List<HeroSpells> heroSpells = heroSpellsLogics.stream().map(this::transformHeroSpells).collect(Collectors.toList());
+
+            return ResponseEntity.ok(heroSpells);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @GetMapping("{matchId}/{heroName}/damage")
@@ -99,5 +109,12 @@ public class MatchController {
         heroItems.setItem(heroItemsLogic.getItem());
         heroItems.setTimestamp(heroItemsLogic.getTimePurchase());
         return heroItems;
+    }
+
+    private HeroSpells transformHeroSpells(HeroSpellsLogic heroSpellsLogic) {
+        HeroSpells heroSpells = new HeroSpells();
+        heroSpells.setSpell(heroSpellsLogic.getSpell());
+        heroSpells.setCasts(heroSpellsLogic.getCasts());
+        return heroSpells;
     }
 }
