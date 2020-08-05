@@ -1,12 +1,15 @@
 package gg.bayes.challenge.db.service.impl;
 
+import gg.bayes.challenge.business.model.HeroKillsLogic;
 import gg.bayes.challenge.db.entities.MatchDamageEntity;
 import gg.bayes.challenge.db.entities.MatchItemEntity;
 import gg.bayes.challenge.db.entities.MatchKillEntity;
 import gg.bayes.challenge.db.entities.MatchSpellEntity;
+import gg.bayes.challenge.db.model.HeroKillsDAO;
 import gg.bayes.challenge.db.service.MatchService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -17,7 +20,9 @@ import java.io.StringReader;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.time.Instant;
+import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -47,6 +52,18 @@ public class MatchServiceImpl implements MatchService {
         new BufferedReader(new StringReader(payload)).lines().filter(isDamage()).forEach(line -> storeDamage(line, matchId));
 
         return matchId;
+    }
+
+    @Override
+    public List<HeroKillsLogic> getMatchDaoGivenMatchId(Long matchId) {
+        String sql = "SELECT hero, COUNT(match_id) as kills FROM bayes.match_kills WHERE match_id = ? GROUP BY hero";
+
+        List<HeroKillsDAO> heroKillsDAOList = jdbcTemplate.query(sql, new Object[]{matchId}, new BeanPropertyRowMapper<>(HeroKillsDAO.class));
+        return heroKillsDAOList.stream().map(heroKillsDAO -> HeroKillsLogic.builder()
+                .hero(heroKillsDAO.getHero())
+                .kills(heroKillsDAO.getKills())
+                .build())
+                .collect(Collectors.toList());
     }
 
     private Long storeMatch() {
