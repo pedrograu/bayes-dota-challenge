@@ -1,10 +1,10 @@
 package gg.bayes.challenge.rest.controller;
 
+import gg.bayes.challenge.db.service.MatchService;
 import gg.bayes.challenge.rest.model.HeroDamage;
 import gg.bayes.challenge.rest.model.HeroItems;
 import gg.bayes.challenge.rest.model.HeroKills;
 import gg.bayes.challenge.rest.model.HeroSpells;
-import gg.bayes.challenge.service.MatchService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
